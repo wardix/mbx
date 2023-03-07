@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SmsService } from 'src/sms/sms.service';
+import { SmsService } from '../sms/sms.service';
 import { ReceiveFeedbackResponseDto } from './dto/receive-feedback-response.dto';
 import { SendFeedbackQuestionDto } from './dto/send-feedback-question.dto';
 
