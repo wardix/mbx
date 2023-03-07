@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe } from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 import { ReceiveFeedbackResponseDto } from './dto/receive-feedback-response.dto';
 import { SendFeedbackQuestionDto } from './dto/send-feedback-question.dto';
@@ -20,7 +15,10 @@ export class FeedbackController {
   }
 
   @Post('question')
-  sendQuestion(@Body(new ValidationPipe({ transform: true })) sendFeedbackQuestionDto: SendFeedbackQuestionDto) {
+  sendQuestion(
+    @Body(new ValidationPipe({ transform: true }))
+    sendFeedbackQuestionDto: SendFeedbackQuestionDto,
+  ) {
     return this.feedbackService.sendQuestion(sendFeedbackQuestionDto);
   }
 }
