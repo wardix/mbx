@@ -94,6 +94,6 @@ export class NocService {
         issue.address +
         '".\n';
     }
-    return { message };
+    return { issueMessage: message };
   }
 }
