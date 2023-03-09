@@ -6,6 +6,9 @@ export class CustomersService {
   constructor(private phonebookRepository: PhonebookRepository) {}
 
   async getValidSubscriptionByPhone(phone: string) {
+    if (phone.length < 10) {
+      return {};
+    }
     const subscriptions = await this.phonebookRepository.getValidSubscription(
       phone,
     );
