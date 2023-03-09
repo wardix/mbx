@@ -17,10 +17,12 @@ export class PhonebookRepository extends Repository<Phonebook> {
   async getValidSubscription(phone: string) {
     const sql = `
       SELECT cs.CustServId, cs.installation_address,
-             IFNULL(cs.ServiceType, s.ServiceType) description
+             IFNULL(cs.ServiceType, s.ServiceType) description,
+             IFNULL(c.DisplayBranchId, c.BranchId) branchId
       FROM sms_phonebook pb
       LEFT JOIN CustomerServices cs ON cs.CustId = pb.custId
       LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
+      LEFT JOIN Customer c ON cs.CustId = c.CustId
       WHERE phone LIKE '%${phone}' AND NOT(cs.CustStatus IN ('NA'))
     `;
     return this.query(sql);

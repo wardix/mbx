@@ -98,7 +98,19 @@ export class NocService {
           returnData.push({
             issue: issueMap[issueId].subject,
             start: issueMap[issueId].start_time,
-            branch: issueMap[issueId].branchId,
+            effect: issueMap[issueId].effect,
+            service: subscriptions[sub].description,
+            address: subscriptions[sub].installation_address,
+          });
+          continue;
+        }
+        if (
+          issueMap[issueId].type === 'upstream' &&
+          issueMap[issueId].branchId === subscriptions[sub].branchId
+        ) {
+          returnData.push({
+            issue: issueMap[issueId].subject,
+            start: issueMap[issueId].start_time,
             effect: issueMap[issueId].effect,
             service: subscriptions[sub].description,
             address: subscriptions[sub].installation_address,
@@ -124,7 +136,7 @@ export class NocService {
 
     for (const issue of issues) {
       timeFormatOptions.timeZone =
-        issue.branch === '062' ? 'Asia/Makassar' : 'Asia/Jakarta';
+        issue.branchId === '062' ? 'Asia/Makassar' : 'Asia/Jakarta';
       const formatter = new Intl.DateTimeFormat('en-US', timeFormatOptions);
       const [date, time] = formatter.format(issue.start).split(', ');
       const [mm, dd, yyyy] = date.split('/');
