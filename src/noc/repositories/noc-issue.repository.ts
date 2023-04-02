@@ -14,7 +14,7 @@ export class NocIssueRepository extends Repository<NocIssue> {
     );
   }
 
-  async getEffectedNocIssue() {
+  async getAllImpactedNocIssue() {
     const sql = `
       SELECT id, subject, eksternal effect, start_time, branchId,
              type, pop_id, ap_id, switch_id
@@ -24,7 +24,7 @@ export class NocIssueRepository extends Repository<NocIssue> {
     return this.query(sql);
   }
 
-  async getEffectedSubscription(issueIds: number[]) {
+  async getImpactedSubscriber(issueIds: number[]) {
     if (issueIds.length == 0) {
       return [];
     }

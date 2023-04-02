@@ -7,6 +7,6 @@ export class NocController {
 
   @Get('issues')
   async findAllIssue(@Query('phone') phone: string) {
-    return this.nocService.getEffectedNocIssueMessage(phone);
+    return this.nocService.getImpactedNocIssueMessage(phone);
   }
 }

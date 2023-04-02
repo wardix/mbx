@@ -11,12 +11,12 @@ export class NocService {
     private customersService: CustomersService,
   ) {}
 
-  async getEffectedNocIssue() {
-    return this.nocIssueRepository.getEffectedNocIssue();
+  async getAllImpactedNocIssue() {
+    return this.nocIssueRepository.getAllImpactedNocIssue();
   }
 
-  async getEffectedSubscription(issueIds: number[]) {
-    return this.nocIssueRepository.getEffectedSubscription(issueIds);
+  async getImpactedSubscriber(issueIds: number[]) {
+    return this.nocIssueRepository.getImpactedSubscriber(issueIds);
   }
 
   getValidDeviceIds(idSet: string) {
@@ -33,8 +33,8 @@ export class NocService {
     return returnData;
   }
 
-  async getEffectedNocIssueByPhone(phone: string) {
-    const issues = await this.getEffectedNocIssue();
+  async getImpactedNocIssueByPhone(phone: string) {
+    const issues = await this.getAllImpactedNocIssue();
     const issueMap = {};
     const fttxIssues = [];
 
@@ -46,83 +46,94 @@ export class NocService {
         switch_id: switchSet,
         ...issueProp
       } = issue;
-      issueMap[id] = { ...issueProp, subscription: [] };
+      issueMap[id] = { ...issueProp, subscriber: [] };
       if (issue.type === 'fttx') {
         fttxIssues.push(id);
         continue;
       }
       if (issue.type === 'pop') {
-        let effectedAps = this.getValidDeviceIds(apSet);
-        let effectedSwitches = this.getValidDeviceIds(switchSet);
-        if (effectedAps.length === 0 && effectedSwitches.length === 0) {
-          effectedAps = await this.nocPopRepository.getAllAp(popId);
-          effectedSwitches = await this.nocPopRepository.getAllSwitch(popId);
+        const impactedSubscribers = await this.getImpactedPopSubscriber(
+          popId,
+          apSet,
+          switchSet,
+        );
+        for (const subId of impactedSubscribers) {
+          issueMap[id].subscriber.push(subId);
         }
-        if (effectedAps.length > 0) {
-          const effectedSubscription =
-            await this.nocPopRepository.getApLinkedSubscription(effectedAps);
-          // FIXME: DRY
-          for (const { CustServId: subscription } of effectedSubscription) {
-            issueMap[id].subscription.push(subscription);
-          }
-        }
-        if (effectedSwitches.length > 0) {
-          const effectedSubscription =
-            await this.nocPopRepository.getSwitchLinkedSubscription(
-              effectedSwitches,
-            );
-          // FIXME: DRY
-          for (const { CustServId: subscription } of effectedSubscription) {
-            issueMap[id].subscription.push(subscription);
-          }
-        }
-        // continue
       }
     }
 
-    const effectedSubscription = await this.getEffectedSubscription(fttxIssues);
-    for (const {
-      noc_id: issueId,
-      cs_id: subscription,
-    } of effectedSubscription) {
-      issueMap[issueId].subscription.push(subscription);
+    const impactedSubscribers = await this.getImpactedSubscriber(fttxIssues);
+    for (const { noc_id: issueId, cs_id: subId } of impactedSubscribers) {
+      issueMap[issueId].subscriber.push(subId);
     }
 
     const subscriptions =
       await this.customersService.getValidSubscriptionByPhone(phone);
 
+    return this.collectImpactedNocIssue(issueMap, subscriptions);
+  }
+
+  async getImpactedPopSubscriber(popId: number, apSet: string, switchSet: string) {
     const returnData = [];
-    for (const issueId in issueMap) {
-      for (const sub in subscriptions) {
-        if (issueMap[issueId].subscription.includes(+sub)) {
-          returnData.push({
-            issue: issueMap[issueId].subject,
-            start: issueMap[issueId].start_time,
-            effect: issueMap[issueId].effect,
-            service: subscriptions[sub].description,
-            address: subscriptions[sub].installation_address,
-          });
-          continue;
-        }
-        if (
-          issueMap[issueId].type === 'upstream' &&
-          issueMap[issueId].branchId === subscriptions[sub].branchId
-        ) {
-          returnData.push({
-            issue: issueMap[issueId].subject,
-            start: issueMap[issueId].start_time,
-            effect: issueMap[issueId].effect,
-            service: subscriptions[sub].description,
-            address: subscriptions[sub].installation_address,
-          });
-        }
+    let impactedAps = this.getValidDeviceIds(apSet);
+    let impactedSwitches = this.getValidDeviceIds(switchSet);
+    if (impactedAps.length === 0 && impactedSwitches.length === 0) {
+      impactedAps = await this.nocPopRepository.getAllAp(popId);
+      impactedSwitches = await this.nocPopRepository.getAllSwitch(popId);
+    }
+    if (impactedAps.length > 0) {
+      const subscribers = await this.nocPopRepository.getApLinkedSubscription(
+        impactedAps,
+      );
+      for (const { CustServId: subId } of subscribers) {
+        returnData.push(subId);
+      }
+    }
+    if (impactedSwitches.length > 0) {
+      const subscribers =
+        await this.nocPopRepository.getSwitchLinkedSubscription(
+          impactedSwitches,
+        );
+      for (const { CustServId: subId } of subscribers) {
+        returnData.push(subId);
       }
     }
     return returnData;
   }
 
-  async getEffectedNocIssueMessage(phone: string) {
-    const issues = await this.getEffectedNocIssueByPhone(phone);
+  collectImpactedNocIssue(issueMap: any, subscriptions: any) {
+    const returnData = [];
+
+    for (const issueId in issueMap) {
+      for (const subId in subscriptions) {
+        const issueData = {
+          issue: issueMap[issueId].subject,
+          start: issueMap[issueId].start_time,
+          effect: issueMap[issueId].effect,
+          service: subscriptions[subId].description,
+          address: subscriptions[subId].installation_address,
+        };
+
+        if (issueMap[issueId].subscriber.includes(+subId)) {
+          returnData.push(issueData);
+          continue;
+        }
+
+        if (
+          issueMap[issueId].type === 'upstream' &&
+          issueMap[issueId].branchId === subscriptions[subId].branchId
+        ) {
+          returnData.push(issueData);
+        }
+      }
+    }
+
+    return returnData;
+  }
+
+  async getImpactedNocIssueMessage(phone: string) {
+    const issues = await this.getImpactedNocIssueByPhone(phone);
     let message = '';
     const timeFormatOptions = {
       timeZone: 'Asia/Jakarta',
