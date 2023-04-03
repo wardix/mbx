@@ -71,7 +71,10 @@ export class NocService {
     const subscriptions =
       await this.customersService.getValidSubscriptionByPhone(phone);
 
-    return this.collectImpactedNocIssue(issueMap, subscriptions);
+    return {
+      impactedIssues: this.collectImpactedNocIssue(issueMap, subscriptions),
+      subscriptions
+    }
   }
 
   async getImpactedPopSubscriber(popId: number, apSet: string, switchSet: string) {
@@ -115,7 +118,7 @@ export class NocService {
           start: issueMap[issueId].start_time,
           effect: issueMap[issueId].effect,
           service: subscriptions[subId].description,
-          address: subscriptions[subId].installation_address,
+          address: subscriptions[subId].installation_address.replace(/\n/g, ' '),
         };
 
         if (issueMap[issueId].subscriber.includes(+subId)) {
@@ -136,8 +139,8 @@ export class NocService {
   }
 
   async getImpactedNocIssueMessage(phone: string) {
-    const issues = await this.getImpactedNocIssueByPhone(phone);
-    let message = '';
+    const { impactedIssues, subscriptions } = await this.getImpactedNocIssueByPhone(phone);
+    let issueMessage = '';
     const timeFormatOptions = {
       timeZone: 'Asia/Jakarta',
       year: 'numeric' as 'numeric',
@@ -148,14 +151,14 @@ export class NocService {
       hour12: false,
     };
 
-    for (const issue of issues) {
+    for (const issue of impactedIssues) {
       timeFormatOptions.timeZone =
         issue.branchId === '062' ? 'Asia/Makassar' : 'Asia/Jakarta';
       const formatter = new Intl.DateTimeFormat('en-US', timeFormatOptions);
       const [date, time] = formatter.format(issue.start).split(', ');
       const [mm, dd, yyyy] = date.split('/');
       const start = `${yyyy}-${mm}-${dd} ${time}`;
-      message +=
+      issueMessage +=
         '"' +
         issue.issue +
         '" sejak ' +
@@ -168,6 +171,19 @@ export class NocService {
         issue.address +
         '".\n';
     }
-    return { issueMessage: message };
+    const subscriptionMessages = []
+    for (const subId in subscriptions) {
+      if (!(subscriptions[subId].installation_address)) {
+        continue
+      }
+      subscriptionMessages.push(
+        `${subscriptions[subId].description} ` +
+        `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`
+      )
+    }
+    return {
+      issueMessage,
+      subscriptionMessage: subscriptionMessages.join('\n')
+    };
   }
 }
