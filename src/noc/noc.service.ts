@@ -107,6 +107,9 @@ export class NocService {
 
     for (const issueId in issueMap) {
       for (const subId in subscriptions) {
+        if (!(subscriptions[subId].installation_address)) {
+          continue
+        }
         const issueData = {
           issue: issueMap[issueId].subject,
           start: issueMap[issueId].start_time,
