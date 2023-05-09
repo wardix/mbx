@@ -5,13 +5,12 @@ import { PhonebookRepository } from './repositories/phonebook.repository';
 export class CustomersService {
   constructor(private phonebookRepository: PhonebookRepository) {}
 
-  async getValidSubscriptionByPhone(phone: string) {
+  async getInternetSubscriptionByPhone(phone: string) {
     if (phone.length < 10) {
       return {};
     }
-    const subscriptions = await this.phonebookRepository.getValidSubscription(
-      phone,
-    );
+    const subscriptions =
+      await this.phonebookRepository.getInternetSubscription(phone);
     const subscriptionMap = {};
     for (const sub of subscriptions) {
       const { CustServId, ...subProps } = sub;

@@ -69,15 +69,19 @@ export class NocService {
     }
 
     const subscriptions =
-      await this.customersService.getValidSubscriptionByPhone(phone);
+      await this.customersService.getInternetSubscriptionByPhone(phone);
 
     return {
       impactedIssues: this.collectImpactedNocIssue(issueMap, subscriptions),
-      subscriptions
-    }
+      subscriptions,
+    };
   }
 
-  async getImpactedPopSubscriber(popId: number, apSet: string, switchSet: string) {
+  async getImpactedPopSubscriber(
+    popId: number,
+    apSet: string,
+    switchSet: string,
+  ) {
     const returnData = [];
     let impactedAps = this.getValidDeviceIds(apSet);
     let impactedSwitches = this.getValidDeviceIds(switchSet);
@@ -110,15 +114,18 @@ export class NocService {
 
     for (const issueId in issueMap) {
       for (const subId in subscriptions) {
-        if (!(subscriptions[subId].installation_address)) {
-          continue
+        if (!subscriptions[subId].installation_address) {
+          continue;
         }
         const issueData = {
           issue: issueMap[issueId].subject,
           start: issueMap[issueId].start_time,
           effect: issueMap[issueId].effect,
           service: subscriptions[subId].description,
-          address: subscriptions[subId].installation_address.replace(/\n/g, ' '),
+          address: subscriptions[subId].installation_address.replace(
+            /\n/g,
+            ' ',
+          ),
         };
 
         if (issueMap[issueId].subscriber.includes(+subId)) {
@@ -139,7 +146,8 @@ export class NocService {
   }
 
   async getImpactedNocIssueMessage(phone: string) {
-    const { impactedIssues, subscriptions } = await this.getImpactedNocIssueByPhone(phone);
+    const { impactedIssues, subscriptions } =
+      await this.getImpactedNocIssueByPhone(phone);
     let issueMessage = '';
     const timeFormatOptions = {
       timeZone: 'Asia/Jakarta',
@@ -171,19 +179,19 @@ export class NocService {
         issue.address +
         '".\n';
     }
-    const subscriptionMessages = []
+    const subscriptionMessages = [];
     for (const subId in subscriptions) {
-      if (!(subscriptions[subId].installation_address)) {
-        continue
+      if (!subscriptions[subId].installation_address) {
+        continue;
       }
       subscriptionMessages.push(
         `${subscriptions[subId].description} ` +
-        `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`
-      )
+          `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`,
+      );
     }
     return {
       issueMessage,
-      subscriptionMessage: subscriptionMessages.join('\n')
+      subscriptionMessage: subscriptionMessages.join('\n'),
     };
   }
 }
