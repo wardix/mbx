@@ -18,4 +18,35 @@ export class CustomersService {
     }
     return subscriptionMap;
   }
+
+  async getBlockedSubscriptionByPhone(phone: string) {
+    if (phone.length < 10) {
+      return {};
+    }
+    const subscriptions = await this.phonebookRepository.getBlockedSubscription(
+      phone,
+    );
+    return subscriptions.reduce((map, sub) => {
+      const { CustServId, ...subProps } = sub;
+      map[CustServId] = subProps;
+      return map;
+    }, {});
+  }
+
+  async getBlockedSubscriptionMessage(phone: string) {
+    const subscriptions = await this.getBlockedSubscriptionByPhone(phone);
+    const subscriptionMessages = [];
+    for (const subId in subscriptions) {
+      if (!subscriptions[subId].installation_address) {
+        continue;
+      }
+      subscriptionMessages.push(
+        `${subscriptions[subId].description} ` +
+          `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`,
+      );
+    }
+    return {
+      blockedMessage: subscriptionMessages.join('\n'),
+    };
+  }
 }
