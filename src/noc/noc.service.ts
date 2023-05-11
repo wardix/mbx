@@ -91,7 +91,7 @@ export class NocService {
     }
     if (impactedAps.length > 0) {
       const subscribers = await this.nocPopRepository.getApLinkedSubscription(
-        impactedAps,
+        impactedAps.map(ap => ap.id),
       );
       for (const { CustServId: subId } of subscribers) {
         returnData.push(subId);
@@ -100,7 +100,7 @@ export class NocService {
     if (impactedSwitches.length > 0) {
       const subscribers =
         await this.nocPopRepository.getSwitchLinkedSubscription(
-          impactedSwitches,
+          impactedSwitches.map(sw => sw.id),
         );
       for (const { CustServId: subId } of subscribers) {
         returnData.push(subId);
