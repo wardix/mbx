@@ -9,4 +9,9 @@ export class CustomersController {
   async findAllBlocked(@Query('phone') phone: string) {
     return this.customersService.getBlockedSubscriptionMessage(phone);
   }
+
+  @Get('blocked-subscriptions')
+  async findAllBlockedSubscriptions(@Query('phone') phone: string) {
+    return this.customersService.getBlockedSubscriptionMessage(phone);
+  }
 }
