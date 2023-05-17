@@ -77,7 +77,7 @@ export class CustomersService {
       );
     }
 
-    for (const [_custId, _type, description, amount] of invoices) {
+    for (const { Description: description, TotalAmount: amount } of invoices) {
       invoiceList.push(`*${IdrFormat.format(amount)}* ${description}`);
     }
 
