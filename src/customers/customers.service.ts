@@ -33,6 +33,13 @@ export class CustomersService {
     }, {});
   }
 
+  async getUnpaidInvoiceByPhone(phone: string) {
+    if (phone.length < 10) {
+      return {};
+    }
+    return this.phonebookRepository.getUnpaidInvoice(phone);
+  }
+
   async getBlockedSubscriptionMessage(phone: string) {
     const subscriptions = await this.getBlockedSubscriptionByPhone(phone);
     const subscriptionMessages = [];
@@ -47,6 +54,36 @@ export class CustomersService {
     }
     return {
       blockedMessage: subscriptionMessages.join('\n'),
+    };
+  }
+
+  async getUnpaidInvoiceMessage(phone: string) {
+    const subscriptions = await this.getInternetSubscriptionByPhone(phone);
+    const invoices = await this.getUnpaidInvoiceByPhone(phone);
+    const subscriptionList = [];
+    const invoiceList = [];
+    const IdrFormat = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    });
+
+    for (const subId in subscriptions) {
+      if (!subscriptions[subId].installation_address) {
+        continue;
+      }
+      subscriptionList.push(
+        `${subscriptions[subId].description} ` +
+          `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`,
+      );
+    }
+
+    for (const [_custId, _type, description, amount] of invoices) {
+      invoiceList.push(`*${IdrFormat.format(amount)}* ${description}`);
+    }
+
+    return {
+      subscriptionMessage: subscriptionList.join('\n'),
+      invoiceMessage: invoiceList.join('\n'),
     };
   }
 }

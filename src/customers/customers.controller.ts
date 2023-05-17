@@ -14,4 +14,9 @@ export class CustomersController {
   async findAllBlockedSubscriptions(@Query('phone') phone: string) {
     return this.customersService.getBlockedSubscriptionMessage(phone);
   }
+
+  @Get('unpaid-invoices')
+  async findAllUnpaidInvoices(@Query('phone') phone: string) {
+    return this.customersService.getUnpaidInvoiceMessage(phone);
+  }
 }
