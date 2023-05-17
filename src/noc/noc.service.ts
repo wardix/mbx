@@ -27,7 +27,7 @@ export class NocService {
     const devices = idSet.split(',');
     for (const id of devices) {
       if (+id) {
-        returnData.push({id: +id});
+        returnData.push({ id: +id });
       }
     }
     return returnData;
