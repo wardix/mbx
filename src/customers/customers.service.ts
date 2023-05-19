@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PhonebookRepository } from './repositories/phonebook.repository';
 
 @Injectable()
 export class CustomersService {
-  constructor(private phonebookRepository: PhonebookRepository) {}
+  constructor(
+    private phonebookRepository: PhonebookRepository,
+    private configService: ConfigService,
+  ) {}
 
   async getInternetSubscriptionByPhone(phone: string) {
     if (phone.length < 10) {
@@ -62,6 +66,8 @@ export class CustomersService {
     const invoices = await this.getUnpaidInvoiceByPhone(phone);
     const subscriptionList = [];
     const invoiceList = [];
+    const bcaVaPrefix = this.configService.get('BCA_VA_PREFIX');
+    const mandiriVaPrefix = this.configService.get('MANDIRI_VA_PREFIX');
     const IdrFormat = new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -77,13 +83,24 @@ export class CustomersService {
       );
     }
 
-    for (const { Description: description, TotalAmount: amount } of invoices) {
-      invoiceList.push(`*${IdrFormat.format(amount)}* ${description}`);
+    for (const {
+      CustId: id,
+      Description: description,
+      TotalAmount: amount,
+    } of invoices) {
+      const vaId = id.startsWith('020') ? id.slice(-6) : id;
+      const invoice =
+        `*${IdrFormat.format(amount)}* ${description}` +
+        '\n' +
+        `BCA VA: *${bcaVaPrefix}-${vaId}*` +
+        '\n' +
+        `Mandiri VA: *${mandiriVaPrefix}-${vaId}`;
+      invoiceList.push(invoice);
     }
 
     return {
       subscriptionMessage: subscriptionList.join('\n'),
-      invoiceMessage: invoiceList.join('\n'),
+      invoiceMessage: invoiceList.join('-- \n'),
     };
   }
 }
