@@ -8,6 +8,7 @@ import { Phonebook } from './customers/entities/phonebook.entity';
 import { FeedbackModule } from './feedback/feedback.module';
 import { NocIssue } from './noc/entities/noc-issue.entity';
 import { NocModule } from './noc/noc.module';
+import { ProspectModule } from './prospect/prospect.module';
 import { SmsInbox } from './sms/entities/sms-inbox.entity';
 import { SmsSatisfaction } from './sms/entities/sms-satisfaction.entity';
 import { SmsSentSatisfaction } from './sms/entities/sms-sent-satisfaction.entity';
@@ -38,6 +39,7 @@ import { SmsModule } from './sms/sms.module';
     SmsModule,
     NocModule,
     CustomersModule,
+    ProspectModule,
   ],
   controllers: [AppController],
   providers: [AppService],
