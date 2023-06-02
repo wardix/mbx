@@ -40,7 +40,7 @@ export class ProspectService {
     const groups = this.configService.get('PROSPECT_LEAD_GROUP_IDS').split(',')
     const data = {
       group_id: groups,
-      description: '',
+      description: this.configService.get('PROSPECT_LEAD_DESCRIPTION'),
       name,
       salutation_id: this.configService.get('PROSPECT_LEAD_SALUTATION_ID'),
       phones: [phone.startsWith('+') ? phone : `+${phone}`],
