@@ -39,7 +39,7 @@ export class ProspectService {
     const owner = await this.getOwner(token)
     const groups = this.configService.get('PROSPECT_LEAD_GROUP_IDS').split(',')
     const data = {
-      group_id: ['1'],
+      group_id: groups,
       description: '',
       name,
       salutation_id: this.configService.get('PROSPECT_LEAD_SALUTATION_ID'),
