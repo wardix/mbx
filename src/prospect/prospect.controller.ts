@@ -6,7 +6,7 @@ export class ProspectController {
   constructor(private readonly prospectService: ProspectService) {}
 
   @Post('lead')
-  async submitLead(@Body() {phone, name}: { phone: string; name: string }) {
-    return this.prospectService.createLead(name, phone)
+  async submitLead(@Body() { phone, name }: { phone: string; name: string }) {
+    return this.prospectService.createLead(name, phone);
   }
 }

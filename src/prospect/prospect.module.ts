@@ -1,8 +1,7 @@
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ProspectService } from './prospect.service';
-import { ProspectController } from './prospect.controller'
+import { ProspectController } from './prospect.controller';
 
 @Module({
   imports: [ConfigModule],
