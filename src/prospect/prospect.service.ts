@@ -38,10 +38,11 @@ export class ProspectService {
     const token = await this.getToken()
     const owner = await this.getOwner(token)
     const groups = this.configService.get('PROSPECT_LEAD_GROUP_IDS').split(',')
+    const safeName = (name.length === 0) ? this.configService.get('PROSPECT_LEAD_DEFAULT_NAME') : name
     const data = {
       group_id: groups,
       description: this.configService.get('PROSPECT_LEAD_DESCRIPTION'),
-      name,
+      name: safeName,
       salutation_id: this.configService.get('PROSPECT_LEAD_SALUTATION_ID'),
       phones: [phone.startsWith('+') ? phone : `+${phone}`],
       email: null,
