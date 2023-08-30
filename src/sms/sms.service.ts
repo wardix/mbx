@@ -59,4 +59,8 @@ export class SmsService {
       sender,
     );
   }
+
+  async getSentById(id: number): Promise<any> {
+    return this.smsSentRepository.getSentById(id);
+  }
 }
