@@ -65,8 +65,15 @@ export class FeedbackService {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
 
-    const [{ sentId, ticketId, customerId, ttsUpdateId, assignedNo }, ..._] =
+    const [{ sentId, ticketId, customerId, ttsUpdateId, assignedNo }] =
       smsSentSatisfaction;
+
+    const smsSent = await this.smsService.getSentById(+sentId);
+
+    const [{ sent }] = smsSent;
+
+    // Don't mark score if sent-response has passed 1 day
+    if (receivedTimestamp - sent > 86400) return;
 
     const minValue = +this.configService.get('SATISFACTION_MIN_VALUE');
     const maxValue = +this.configService.get('SATISFACTION_MAX_VALUE');
