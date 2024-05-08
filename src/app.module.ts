@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -14,6 +14,7 @@ import { SmsSatisfaction } from './sms/entities/sms-satisfaction.entity';
 import { SmsSentSatisfaction } from './sms/entities/sms-sent-satisfaction.entity';
 import { SmsSent } from './sms/entities/sms-sent.entity';
 import { SmsModule } from './sms/sms.module';
+import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
   imports: [
@@ -44,4 +45,9 @@ import { SmsModule } from './sms/sms.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*')
+  }
+}
