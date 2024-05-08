@@ -59,10 +59,12 @@ export class FeedbackService {
     };
     const createdSmsInbox = await this.smsService.createInbox(smsInbox);
     const smsSentSatisfaction =
-      await this.smsService.getSentSatisfactionBySender(sender);
+      await this.smsService.getSentSatisfactionBySender(
+        sender.startsWith('+') ? sender : `+${sender}`
+      );
 
     if (smsSentSatisfaction.length < 1) {
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+      return;
     }
 
     const [{ sentId, ticketId, customerId, ttsUpdateId, assignedNo }] =
