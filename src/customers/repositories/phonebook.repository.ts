@@ -26,8 +26,7 @@ export class PhonebookRepository extends Repository<Phonebook> {
       LEFT JOIN Customer c ON cs.CustId = c.CustId
       WHERE phone LIKE '%${phone}'
       AND NOT(cs.CustStatus IN ('NA'))
-      AND ServiceGroupTypeId = 1
-    `;
+      `;
     return this.query(sql);
   }
 

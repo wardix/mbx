@@ -75,12 +75,15 @@ export class CustomersService {
 
     for (const subId in subscriptions) {
       if (!subscriptions[subId].installation_address) {
-        continue;
-      }
-      subscriptionList.push(
-        `${subscriptions[subId].description} ` +
-          `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`,
-      );
+        subscriptionList.push(subscriptions[subId].description);
+      } else
+        subscriptionList.push(
+          `${subscriptions[subId].description} ` +
+            `(${subscriptions[subId].installation_address.replace(
+              /\n/g,
+              ' ',
+            )})`,
+        );
     }
 
     for (const {
