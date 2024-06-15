@@ -75,11 +75,11 @@ export class CustomersService {
   }
 
   async getUnpaidInvoiceMessage(phone: string) {
-    const internetSubscriptions = await this.getInternetSubscriptionByPhone(
-      phone,
-    );
-    const digitalBusinessSubscriptions =
-      await this.getDigitalBusinessSubscriptionByPhone(phone);
+    const [internetSubscriptions, digitalBusinessSubscriptions] =
+      await Promise.all([
+        this.getInternetSubscriptionByPhone(phone),
+        this.getDigitalBusinessSubscriptionByPhone(phone),
+      ]);
     const invoices = await this.getUnpaidInvoiceByPhone(phone);
     const subscriptionList = [];
     const invoiceList = [];
