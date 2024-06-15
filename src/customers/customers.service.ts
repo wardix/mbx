@@ -22,6 +22,19 @@ export class CustomersService {
     }
     return subscriptionMap;
   }
+  async getDigitalBusinessSubscriptionByPhone(phone: string) {
+    if (phone.length < 10) {
+      return {};
+    }
+    const subscriptions =
+      await this.phonebookRepository.getDigitalBusinessSubscription(phone);
+    const subscriptionMap = {};
+    for (const sub of subscriptions) {
+      const { CustServId, ...subProps } = sub;
+      subscriptionMap[CustServId] = subProps;
+    }
+    return subscriptionMap;
+  }
 
   async getBlockedSubscriptionByPhone(phone: string) {
     if (phone.length < 10) {
@@ -62,7 +75,11 @@ export class CustomersService {
   }
 
   async getUnpaidInvoiceMessage(phone: string) {
-    const subscriptions = await this.getInternetSubscriptionByPhone(phone);
+    const internetSubscriptions = await this.getInternetSubscriptionByPhone(
+      phone,
+    );
+    const digitalBusinessSubscriptions =
+      await this.getDigitalBusinessSubscriptionByPhone(phone);
     const invoices = await this.getUnpaidInvoiceByPhone(phone);
     const subscriptionList = [];
     const invoiceList = [];
@@ -73,10 +90,13 @@ export class CustomersService {
       currency: 'IDR',
     });
 
+    const subscriptions = {
+      ...internetSubscriptions,
+      ...digitalBusinessSubscriptions,
+    };
+
     for (const subId in subscriptions) {
-      if (!subscriptions[subId].installation_address) {
-        subscriptionList.push(subscriptions[subId].description);
-      } else
+      if (subscriptions[subId].installation_address) {
         subscriptionList.push(
           `${subscriptions[subId].description} ` +
             `(${subscriptions[subId].installation_address.replace(
@@ -84,6 +104,12 @@ export class CustomersService {
               ' ',
             )})`,
         );
+      } else if (subscriptions[subId].cust_domain) {
+        subscriptionList.push(
+          `${subscriptions[subId].description} ` +
+            `(${subscriptions[subId].cust_domain.replace(/\n/g, ' ')})`,
+        );
+      } else subscriptionList.push(subscriptions[subId].description);
     }
 
     for (const {
