@@ -93,4 +93,28 @@ export class PhonebookRepository extends Repository<Phonebook> {
     `;
     return this.query(sql);
   }
+
+  async getCustomerTicketsOpen(phone: string) {
+    const sql = `
+      SELECT tts.Ttsid ticketId, tts.Problem subject
+      FROM Tts tts
+        LEFT JOIN sms_phonebook sp ON tts.custId = sp.custId
+      where sp.phone LIKE '%${phone}%'
+        AND tts.Status NOT IN ('Cancel', 'Closed')`;
+
+    return this.query(sql);
+  }
+
+  async getCustomerTicketsClosed(phone: string) {
+    const sql = `
+      SELECT tts.TtsId ticketId, tts.Problem subject
+      FROM Tts tts
+        LEFT JOIN TtsLog tl ON tts.TtsId = tl.ticketId
+        LEFT JOIN sms_phonebook sp ON tts.custId = sp.custId
+      where sp.phone LIKE '%${phone}%'
+        AND tts.Status IN ('Cancel', 'Closed')
+        AND tl.date > DATE_SUB(NOW(), INTERVAL 1 DAY)`;
+
+    return this.query(sql);
+  }
 }

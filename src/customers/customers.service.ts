@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PhonebookRepository } from './repositories/phonebook.repository';
+import Hashids from 'hashids';
 
 @Injectable()
 export class CustomersService {
@@ -130,6 +131,43 @@ export class CustomersService {
     return {
       subscriptionMessage: subscriptionList.join('\n'),
       invoiceMessage: invoiceList.join('-- \n'),
+    };
+  }
+
+  async getCustomerTickets(phone: string) {
+    const [openTickets, recentlyClosedTickets] = await Promise.all([
+      this.phonebookRepository.getCustomerTicketsOpen(phone),
+      this.phonebookRepository.getCustomerTicketsClosed(phone),
+    ]).then(([openTickets, recentlyClosedTickets]) => {
+      const hashIdsConfig = this.configService.get('hashIds');
+      const hashIds = new Hashids(
+        hashIdsConfig.salt,
+        hashIdsConfig.length,
+        hashIdsConfig.charPool,
+      );
+      return [
+        openTickets.map((ticket) => {
+          return {
+            ...ticket,
+            url: `${this.configService.get(
+              'IS_HOST',
+            )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
+          };
+        }),
+        recentlyClosedTickets.map((ticket) => {
+          return {
+            ...ticket,
+            url: `${this.configService.get(
+              'IS_HOST',
+            )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
+          };
+        }),
+      ];
+    });
+
+    return {
+      openTickets,
+      recentlyClosedTickets,
     };
   }
 }

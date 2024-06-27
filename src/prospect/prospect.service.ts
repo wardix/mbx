@@ -8,6 +8,7 @@ export class ProspectService {
   constructor(private configService: ConfigService) {}
 
   async getToken() {
+    // @ts-ignore
     const form = new FormData();
     form.append('grant_type', this.configService.get('PROSPECT_GRANT_TYPE'));
     form.append('client_id', this.configService.get('PROSPECT_CLIENT_ID'));
