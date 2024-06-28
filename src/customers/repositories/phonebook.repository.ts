@@ -113,7 +113,7 @@ export class PhonebookRepository extends Repository<Phonebook> {
         LEFT JOIN sms_phonebook sp ON tts.custId = sp.custId
       where sp.phone LIKE '%${phone}%'
         AND tts.Status IN ('Cancel', 'Closed')
-        AND tl.date > DATE_SUB(NOW(), INTERVAL 1 DAY)`;
+        AND tl.date > DATE_SUB(NOW(), INTERVAL 30 DAY)`;
 
     return this.query(sql);
   }
