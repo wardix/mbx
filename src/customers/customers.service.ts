@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PhonebookRepository } from './repositories/phonebook.repository';
+import Hashids from 'hashids';
 
 @Injectable()
 export class CustomersService {
@@ -15,6 +16,19 @@ export class CustomersService {
     }
     const subscriptions =
       await this.phonebookRepository.getInternetSubscription(phone);
+    const subscriptionMap = {};
+    for (const sub of subscriptions) {
+      const { CustServId, ...subProps } = sub;
+      subscriptionMap[CustServId] = subProps;
+    }
+    return subscriptionMap;
+  }
+  async getDigitalBusinessSubscriptionByPhone(phone: string) {
+    if (phone.length < 10) {
+      return {};
+    }
+    const subscriptions =
+      await this.phonebookRepository.getDigitalBusinessSubscription(phone);
     const subscriptionMap = {};
     for (const sub of subscriptions) {
       const { CustServId, ...subProps } = sub;
@@ -62,7 +76,11 @@ export class CustomersService {
   }
 
   async getUnpaidInvoiceMessage(phone: string) {
-    const subscriptions = await this.getInternetSubscriptionByPhone(phone);
+    const [internetSubscriptions, digitalBusinessSubscriptions] =
+      await Promise.all([
+        this.getInternetSubscriptionByPhone(phone),
+        this.getDigitalBusinessSubscriptionByPhone(phone),
+      ]);
     const invoices = await this.getUnpaidInvoiceByPhone(phone);
     const subscriptionList = [];
     const invoiceList = [];
@@ -73,14 +91,26 @@ export class CustomersService {
       currency: 'IDR',
     });
 
+    const subscriptions = {
+      ...internetSubscriptions,
+      ...digitalBusinessSubscriptions,
+    };
+
     for (const subId in subscriptions) {
-      if (!subscriptions[subId].installation_address) {
-        continue;
-      }
-      subscriptionList.push(
-        `${subscriptions[subId].description} ` +
-          `(${subscriptions[subId].installation_address.replace(/\n/g, ' ')})`,
-      );
+      if (subscriptions[subId].installation_address) {
+        subscriptionList.push(
+          `${subscriptions[subId].description} ` +
+            `(${subscriptions[subId].installation_address.replace(
+              /\n/g,
+              ' ',
+            )})`,
+        );
+      } else if (subscriptions[subId].cust_domain) {
+        subscriptionList.push(
+          `${subscriptions[subId].description} ` +
+            `(${subscriptions[subId].cust_domain.replace(/\n/g, ' ')})`,
+        );
+      } else subscriptionList.push(subscriptions[subId].description);
     }
 
     for (const {
@@ -101,6 +131,43 @@ export class CustomersService {
     return {
       subscriptionMessage: subscriptionList.join('\n'),
       invoiceMessage: invoiceList.join('-- \n'),
+    };
+  }
+
+  async getCustomerTickets(phone: string) {
+    const [openTickets, recentlyClosedTickets] = await Promise.all([
+      this.phonebookRepository.getCustomerTicketsOpen(phone),
+      this.phonebookRepository.getCustomerTicketsClosed(phone),
+    ]).then(([openTickets, recentlyClosedTickets]) => {
+      const hashIdsConfig = this.configService.get('hashIds');
+      const hashIds = new Hashids(
+        hashIdsConfig.salt,
+        hashIdsConfig.length,
+        hashIdsConfig.charPool,
+      );
+      return [
+        openTickets.map((ticket) => {
+          return {
+            ...ticket,
+            url: `${this.configService.get(
+              'IS_HOST',
+            )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
+          };
+        }),
+        recentlyClosedTickets.map((ticket) => {
+          return {
+            ...ticket,
+            url: `${this.configService.get(
+              'IS_HOST',
+            )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
+          };
+        }),
+      ];
+    });
+
+    return {
+      openTickets,
+      recentlyClosedTickets,
     };
   }
 }

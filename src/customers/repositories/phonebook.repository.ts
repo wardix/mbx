@@ -25,8 +25,25 @@ export class PhonebookRepository extends Repository<Phonebook> {
       LEFT JOIN ServiceGroup sg ON sg.ServiceGroup = s.ServiceGroup
       LEFT JOIN Customer c ON cs.CustId = c.CustId
       WHERE phone LIKE '%${phone}'
-      AND NOT(cs.CustStatus IN ('NA'))
+      AND cs.CustStatus NOT IN ('NA')
       AND ServiceGroupTypeId = 1
+    `;
+    return this.query(sql);
+  }
+
+  async getDigitalBusinessSubscription(phone: string) {
+    const sql = `
+      SELECT cs.CustServId, cs.CustDomain cust_domain,
+             IFNULL(cs.ServiceType, s.ServiceType) description,
+             IFNULL(c.DisplayBranchId, c.BranchId) branchId
+      FROM sms_phonebook pb
+      LEFT JOIN CustomerServices cs ON cs.CustId = pb.custId
+      LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
+      LEFT JOIN ServiceGroup sg ON sg.ServiceGroup = s.ServiceGroup
+      LEFT JOIN Customer c ON cs.CustId = c.CustId
+      WHERE phone LIKE '%${phone}'
+      AND cs.CustStatus NOT IN ('NA')
+      AND ServiceGroupTypeId != 1
     `;
     return this.query(sql);
   }
@@ -74,6 +91,30 @@ export class PhonebookRepository extends Repository<Phonebook> {
         AND nci.Credit > 0
         AND sp.phone LIKE '%${phone}'
     `;
+    return this.query(sql);
+  }
+
+  async getCustomerTicketsOpen(phone: string) {
+    const sql = `
+      SELECT tts.Ttsid ticketId, tts.Problem subject
+      FROM Tts tts
+        LEFT JOIN sms_phonebook sp ON tts.custId = sp.custId
+      where sp.phone LIKE '%${phone}%'
+        AND tts.Status NOT IN ('Cancel', 'Closed')`;
+
+    return this.query(sql);
+  }
+
+  async getCustomerTicketsClosed(phone: string) {
+    const sql = `
+      SELECT tts.TtsId ticketId, tts.Problem subject
+      FROM Tts tts
+        LEFT JOIN TtsLog tl ON tts.TtsId = tl.ticketId
+        LEFT JOIN sms_phonebook sp ON tts.custId = sp.custId
+      where sp.phone LIKE '%${phone}%'
+        AND tts.Status IN ('Cancel', 'Closed')
+        AND tl.date > DATE_SUB(NOW(), INTERVAL 1 DAY)`;
+
     return this.query(sql);
   }
 }

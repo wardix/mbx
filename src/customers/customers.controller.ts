@@ -19,4 +19,9 @@ export class CustomersController {
   async findAllUnpaidInvoices(@Query('phone') phone: string) {
     return this.customersService.getUnpaidInvoiceMessage(phone);
   }
+
+  @Get('tickets')
+  async findAllCustomerTickets(@Query('phone') phone: string) {
+    return this.customersService.getCustomerTickets(phone);
+  }
 }

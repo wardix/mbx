@@ -18,7 +18,19 @@ import { LoggerMiddleware } from './logger.middleware';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [
+        () => ({
+          IS_HOST: process.env.IS_HOST,
+          hashIds: {
+            salt: process.env.IS_HASH_ID_SALT,
+            length: 8,
+            charPool: 'abcdefghijklmnopqrstuvwxyz1234567890',
+          },
+        }),
+      ],
+    }),
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as 'mysql' | 'mariadb' | 'postgres',
       host: process.env.DB_HOST,
@@ -45,9 +57,8 @@ import { LoggerMiddleware } from './logger.middleware';
   controllers: [AppController],
   providers: [AppService],
 })
-
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*')
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }
