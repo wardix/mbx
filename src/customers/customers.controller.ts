@@ -24,4 +24,8 @@ export class CustomersController {
   async findAllCustomerTickets(@Query('phone') phone: string) {
     return this.customersService.getCustomerTickets(phone);
   }
+  @Get('recent-receipts')
+  async findAllRecentReceipt(@Query('phone') phone: string) {
+    return this.customersService.getRecentReceipts(phone);
+  }
 }

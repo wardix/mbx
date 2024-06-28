@@ -170,4 +170,11 @@ export class CustomersService {
       recentlyClosedTickets,
     };
   }
+
+  async getRecentReceipts(phone: string) {
+    const recentReceipt = await this.phonebookRepository.getRecentReceipts(
+      phone,
+    );
+    return { recentReceipt };
+  }
 }

@@ -117,4 +117,29 @@ export class PhonebookRepository extends Repository<Phonebook> {
 
     return this.query(sql);
   }
+
+  async getRecentReceipts(phone: string) {
+    const sql = `
+      SELECT nr.ReceiptId, nr.CustId, nr.ForPaying Description, nci2.Credit, nr.Date
+        FROM NewReceipt nr
+      LEFT JOIN NewCustomerInvoice nci 
+        ON nr.ReceiptId = nci.Id
+        AND nci.Type = 'RA02'
+      LEFT JOIN NewCustomerInvoiceBatch ncib ON ncib.AI = nci.AI
+      LEFT JOIN NewCustomerInvoiceBatch ncib2
+        ON ncib2.batchNo = ncib.batchNo
+        AND ncib2.AI != ncib.AI
+      LEFT JOIN NewCustomerInvoice nci2
+        ON nci2.AI = ncib2.AI
+        AND nci2.Type != 'RA02'
+      LEFT JOIN CustomerInvoiceTemp cit
+        ON cit.InvoiceNum = nci2.Id
+        AND cit.Urut = nci2.No
+      LEFT JOIN InvoiceTypeMonth itm ON itm.InvoiceType = cit.InvoiceType
+      LEFT JOIN sms_phonebook sp ON nr.CustId = sp.custId
+      WHERE sp.phone LIKE '%${phone}%'
+        AND nr.Date > DATE_SUB(NOW(), INTERVAL itm.Month MONTH)
+      `;
+    return this.query(sql);
+  }
 }
