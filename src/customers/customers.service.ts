@@ -172,9 +172,25 @@ export class CustomersService {
   }
 
   async getRecentReceipts(phone: string) {
-    const recentReceipt = await this.phonebookRepository.getRecentReceipts(
+    const dateFormat = new Intl.DateTimeFormat('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    const IdrFormat = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    });
+    const recentReceipts = await this.phonebookRepository.getRecentReceipts(
       phone,
     );
-    return { recentReceipt };
+    const recentlyReceiptMessage = recentReceipts
+      .map(
+        (receipt) =>
+          `[\`${dateFormat.format(receipt.date)}\`] ${
+            receipt.description
+          } - *${IdrFormat.format(receipt.amount)}*`,
+      )
+      .join('\n');
+    return { recentReceipts, recentlyReceiptMessage };
   }
 }

@@ -120,7 +120,7 @@ export class PhonebookRepository extends Repository<Phonebook> {
 
   async getRecentReceipts(phone: string) {
     const sql = `
-      SELECT nr.ReceiptId, nr.CustId, nr.ForPaying Description, nci2.Credit, nr.Date
+      SELECT nr.ReceiptId receiptId, nr.CustId custId, nr.ForPaying description, nr.Amount amount, nr.insertDate date
         FROM NewReceipt nr
       LEFT JOIN NewCustomerInvoice nci 
         ON nr.ReceiptId = nci.Id
@@ -139,6 +139,8 @@ export class PhonebookRepository extends Repository<Phonebook> {
       LEFT JOIN sms_phonebook sp ON nr.CustId = sp.custId
       WHERE sp.phone LIKE '%${phone}%'
         AND nr.Date > DATE_SUB(NOW(), INTERVAL itm.Month MONTH)
+      GROUP BY nr.ReceiptId
+      ORDER BY nr.insertDate DESC
       `;
     return this.query(sql);
   }
