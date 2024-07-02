@@ -93,4 +93,48 @@ export class PhonebookRepository extends Repository<Phonebook> {
     `;
     return this.query(sql);
   }
+
+  async getCustomerTicketsOpen(phone: string) {
+    const sql = `
+      SELECT tts.TtsId ticketId, tts.Problem subject, tts.PostedTime createdAt, e.EmpFName empFirstName, e.EmpLName empLastName
+      FROM sms_phonebook sp 
+      LEFT JOIN Tts tts ON tts.custId = sp.custId
+      LEFT JOIN Employee e ON e.EmpId = tts.EmpId
+      WHERE sp.phone = '+${phone}'
+        AND tts.Status NOT IN ('Cancel', 'Closed')`;
+
+    return this.query(sql);
+  }
+
+  async getCustomerTicketsClosed(phone: string) {
+    const sql = `
+      SELECT tts.TtsId ticketId, tts.Problem subject, tts.PostedTime createdAt, tu.UpdatedTime closedAt, e.EmpFName empFirstName, e.EmpLName empLastName
+        FROM sms_phonebook sp 
+      LEFT JOIN Tts tts ON tts.CustId = sp.CustId 
+      LEFT JOIN Employee e ON e.EmpId = tts.EmpId
+      LEFT JOIN TtsUpdate tu on tu.TtsId = tts.TtsId
+      LEFT JOIN TtsChange tc on tc.TtsUpdateId = tu.TtsUpdateId 
+        AND tc.field = 'Status' 
+      WHERE sp.phone = '+${phone}' 
+        AND tts.Status IN ('Cancel', 'Closed')
+        AND tc.NewValue IN ('Cancel', 'Closed') 
+        AND tc.OldValue != tc.NewValue
+        AND tu.UpdatedTime > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+      `;
+
+    return this.query(sql);
+  }
+
+  async getRecentReceipts(phone: string) {
+    const sql = `
+      SELECT nr.ReceiptId receiptId, nr.CustId custId, nr.ForPaying description, nr.Amount amount, nr.insertDate date
+      FROM sms_phonebook sp
+      LEFT JOIN NewReceipt nr ON nr.CustId = sp.custId
+      WHERE sp.phone = '+${phone}'
+        AND nr.Type = 'RA02'
+        AND nr.Date > DATE_SUB(NOW(), INTERVAL 2 MONTH)
+      ORDER BY nr.insertDate DESC
+      `;
+    return this.query(sql);
+  }
 }
