@@ -135,6 +135,10 @@ export class CustomersService {
   }
 
   async getCustomerTickets(phone: string) {
+    const dateFormat = new Intl.DateTimeFormat('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
     const [openTickets, recentlyClosedTickets] = await Promise.all([
       this.phonebookRepository.getCustomerTicketsOpen(phone),
       this.phonebookRepository.getCustomerTicketsClosed(phone),
@@ -165,9 +169,25 @@ export class CustomersService {
       ];
     });
 
+    const messageFormat = (ticket) => {
+      const createdBy = `${ticket.empFirstName || ''}${
+        ticket.empLastName ? ` ${ticket.empLastName}` : '-'
+      }`;
+      return `*#${ticket.ticketId}*\n[\`${dateFormat.format(
+        ticket.createdAt,
+      )}\`] ${ticket.subject}\nDibuat oleh: ${createdBy}`;
+    };
+
+    const openTicketMessage = openTickets.map(messageFormat).join('\n\n');
+    const recentlyClosedTicketMessage = recentlyClosedTickets
+      .map(messageFormat)
+      .join('\n\n');
+
     return {
       openTickets,
       recentlyClosedTickets,
+      openTicketMessage,
+      recentlyClosedTicketMessage,
     };
   }
 
