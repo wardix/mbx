@@ -153,6 +153,7 @@ export class CustomersService {
         openTickets.map((ticket) => {
           return {
             ...ticket,
+            employee: JSON.parse(ticket.employee),
             url: `${this.configService.get(
               'IS_HOST',
             )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
@@ -161,6 +162,7 @@ export class CustomersService {
         recentlyClosedTickets.map((ticket) => {
           return {
             ...ticket,
+            employee: JSON.parse(ticket.employee),
             url: `${this.configService.get(
               'IS_HOST',
             )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
@@ -170,8 +172,10 @@ export class CustomersService {
     });
 
     const messageFormat = (ticket) => {
-      const createdBy = `${ticket.empFirstName || ''}${
-        ticket.empLastName ? ` ${ticket.empLastName}` : '-'
+      const createdBy = `${ticket.employee.firstName?.trimEnd() || ''}${
+        ticket.employee.lastName
+          ? ` ${ticket.employee.lastName?.trimEnd()}`
+          : '-'
       }`;
       return `*#${ticket.ticketId}*\n[\`${dateFormat.format(
         ticket.createdAt,
