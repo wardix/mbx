@@ -96,7 +96,8 @@ export class PhonebookRepository extends Repository<Phonebook> {
 
   async getCustomerTicketsOpen(phone: string) {
     const sql = `
-      SELECT tts.TtsId ticketId, tts.Problem subject, tts.PostedTime createdAt, e.EmpFName empFirstName, e.EmpLName empLastName
+      SELECT tts.TtsId ticketId, tts.Problem subject, tts.PostedTime createdAt, 
+             JSON_OBJECT("firstName", e.EmpFName, "lastName", e.EmpLName) employee
       FROM sms_phonebook sp 
       LEFT JOIN Tts tts ON tts.custId = sp.custId
       LEFT JOIN Employee e ON e.EmpId = tts.EmpId
@@ -108,8 +109,9 @@ export class PhonebookRepository extends Repository<Phonebook> {
 
   async getCustomerTicketsClosed(phone: string) {
     const sql = `
-      SELECT tts.TtsId ticketId, tts.Problem subject, tts.PostedTime createdAt, tu.UpdatedTime closedAt, e.EmpFName empFirstName, e.EmpLName empLastName
-        FROM sms_phonebook sp 
+      SELECT tts.TtsId ticketId, tts.Problem subject, tts.PostedTime createdAt, 
+             tu.UpdatedTime closedAt, JSON_OBJECT("firstName", e.EmpFName, "lastName", e.EmpLName) employee
+      FROM sms_phonebook sp 
       LEFT JOIN Tts tts ON tts.CustId = sp.CustId 
       LEFT JOIN Employee e ON e.EmpId = tts.EmpId
       LEFT JOIN TtsUpdate tu on tu.TtsId = tts.TtsId
