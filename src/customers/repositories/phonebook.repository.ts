@@ -129,9 +129,11 @@ export class PhonebookRepository extends Repository<Phonebook> {
 
   async getRecentReceipts(phone: string) {
     const sql = `
-      SELECT nr.ReceiptId receiptId, nr.CustId custId, nr.ForPaying description, nr.Amount amount, nr.insertDate date
+      SELECT nr.ReceiptId receiptId, nr.Amount amount, nr.insertDate date,
+             JSON_OBJECT('custId', c.CustId, 'custName', c.CustName) customer
       FROM sms_phonebook sp
       LEFT JOIN NewReceipt nr ON nr.CustId = sp.custId
+      LEFT JOIN Customer c ON c.CustId = nr.CustId
       WHERE sp.phone = '+${phone}'
         AND nr.Type = 'RA02'
         AND nr.Date > DATE_SUB(NOW(), INTERVAL 2 MONTH)
