@@ -197,22 +197,32 @@ export class CustomersService {
 
   async getRecentReceipts(phone: string) {
     const dateFormat = new Intl.DateTimeFormat('id-ID', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
+      timeZoneName: 'short',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
     const IdrFormat = new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
     });
-    const recentReceipts = await this.phonebookRepository.getRecentReceipts(
+    const recentReceiptsData = await this.phonebookRepository.getRecentReceipts(
       phone,
     );
+    const recentReceipts = recentReceiptsData.map((receipt) => ({
+      ...receipt,
+      customer: JSON.parse(receipt.customer),
+    }));
     const recentlyReceiptMessage = recentReceipts
       .map(
         (receipt) =>
-          `[\`${dateFormat.format(receipt.date)}\`] ${
-            receipt.description
-          } - *${IdrFormat.format(receipt.amount)}*`,
+          `[\`${dateFormat.format(receipt.date)}\`] Receipt for ${
+            receipt.customer.custName
+          }(${receipt.customer.custId}) - *${IdrFormat.format(
+            receipt.amount,
+          )}*`,
       )
       .join('\n');
     return { recentReceipts, recentlyReceiptMessage };
