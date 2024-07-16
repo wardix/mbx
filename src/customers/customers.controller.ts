@@ -19,4 +19,13 @@ export class CustomersController {
   async findAllUnpaidInvoices(@Query('phone') phone: string) {
     return this.customersService.getUnpaidInvoiceMessage(phone);
   }
+
+  @Get('tickets')
+  async findAllCustomerTickets(@Query('phone') phone: string) {
+    return this.customersService.getCustomerTickets(phone);
+  }
+  @Get('recent-receipts')
+  async findAllRecentReceipt(@Query('phone') phone: string) {
+    return this.customersService.getRecentReceipts(phone);
+  }
 }

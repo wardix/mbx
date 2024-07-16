@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PhonebookRepository } from './repositories/phonebook.repository';
+import Hashids from 'hashids';
 
 @Injectable()
 export class CustomersService {
@@ -131,5 +132,99 @@ export class CustomersService {
       subscriptionMessage: subscriptionList.join('\n'),
       invoiceMessage: invoiceList.join('-- \n'),
     };
+  }
+
+  async getCustomerTickets(phone: string) {
+    const dateFormat = new Intl.DateTimeFormat('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    const [openTickets, recentlyClosedTickets] = await Promise.all([
+      this.phonebookRepository.getCustomerTicketsOpen(phone),
+      this.phonebookRepository.getCustomerTicketsClosed(phone),
+    ]).then(([openTickets, recentlyClosedTickets]) => {
+      const hashIdsConfig = this.configService.get('hashIds');
+      const hashIds = new Hashids(
+        hashIdsConfig.salt,
+        hashIdsConfig.length,
+        hashIdsConfig.charPool,
+      );
+      return [
+        openTickets.map((ticket) => {
+          return {
+            ...ticket,
+            employee: JSON.parse(ticket.employee),
+            url: `${this.configService.get(
+              'IS_HOST',
+            )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
+          };
+        }),
+        recentlyClosedTickets.map((ticket) => {
+          return {
+            ...ticket,
+            employee: JSON.parse(ticket.employee),
+            url: `${this.configService.get(
+              'IS_HOST',
+            )}/ticket?id=${hashIds.encode(ticket.ticketId)}`,
+          };
+        }),
+      ];
+    });
+
+    const messageFormat = (ticket) => {
+      const createdBy = `${ticket.employee.firstName?.trimEnd() || ''}${
+        ticket.employee.lastName
+          ? ` ${ticket.employee.lastName?.trimEnd()}`
+          : '-'
+      }`;
+      return `*#${ticket.ticketId}*\n[\`${dateFormat.format(
+        ticket.createdAt,
+      )}\`] ${ticket.subject}\nDibuat oleh: ${createdBy}`;
+    };
+
+    const openTicketMessage = openTickets.map(messageFormat).join('\n\n');
+    const recentlyClosedTicketMessage = recentlyClosedTickets
+      .map(messageFormat)
+      .join('\n\n');
+
+    return {
+      openTickets,
+      recentlyClosedTickets,
+      openTicketMessage,
+      recentlyClosedTicketMessage,
+    };
+  }
+
+  async getRecentReceipts(phone: string) {
+    const dateFormat = new Intl.DateTimeFormat('id-ID', {
+      timeZoneName: 'short',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const IdrFormat = new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    });
+    const recentReceiptsData = await this.phonebookRepository.getRecentReceipts(
+      phone,
+    );
+    const recentReceipts = recentReceiptsData.map((receipt) => ({
+      ...receipt,
+      customer: JSON.parse(receipt.customer),
+    }));
+    const recentlyReceiptMessage = recentReceipts
+      .map(
+        (receipt) =>
+          `[\`${dateFormat.format(receipt.date)}\`] Receipt for ${
+            receipt.customer.custName
+          }(${receipt.customer.custId}) - *${IdrFormat.format(
+            receipt.amount,
+          )}*`,
+      )
+      .join('\n');
+    return { recentReceipts, recentlyReceiptMessage };
   }
 }
