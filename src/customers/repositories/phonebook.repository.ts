@@ -67,30 +67,11 @@ export class PhonebookRepository extends Repository<Phonebook> {
 
   async getUnpaidInvoice(phone: string) {
     const sql = `
-      SELECT nci.CustId, nci.Type, nci.Description,
-             cit.CustTotSubsFee -
-               IFNULL(cid.Amount, 0) +
-               IF(cit.PPN > 100,
-                  cit.PPN,
-                  cit.PPN /
-                    100 * (cit.CustTotSubsFee - IFNULL(cid.Amount, 0)))
-               AS TotalAmount
-      FROM NewCustomerInvoice nci
-      LEFT JOIN NewCustomerInvoiceBatch ncib ON ncib.AI = nci.AI
-      LEFT JOIN Customer c ON c.CustId = nci.CustId
-      LEFT JOIN CustomerInvoiceTemp cit
-        ON cit.InvoiceNum = nci.Id
-          AND cit.Urut = nci.No
-          AND nci.Type = 'internet'
-      LEFT JOIN CustomerInvoiceDiscount cid
-        ON cid.InvoiceNum = cit.InvoiceNum
-          AND cid.Urut = cit.Urut
-      LEFT JOIN sms_phonebook sp ON nci.CustId = sp.custId
-      WHERE nci.Type IN ('internet', 'stock')
-        AND ncib.batchNo IS NULL
-        AND nci.Credit > 0
-        AND sp.phone LIKE '%${phone}'
-    `;
+      SELECT c.CustId, IFNULL(c.CustCompany, c.CustName) CustName, c.Saldo 
+      FROM Customer c 
+      LEFT JOIN sms_phonebook sp ON c.CustId = sp.custId 
+      WHERE sp.phone = ${phone} 
+        AND c.Saldo < 0`;
     return this.query(sql);
   }
 

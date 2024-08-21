@@ -113,18 +113,18 @@ export class CustomersService {
       } else subscriptionList.push(subscriptions[subId].description);
     }
 
-    for (const {
-      CustId: id,
-      Description: description,
-      TotalAmount: amount,
-    } of invoices) {
-      const vaId = id.startsWith('020') ? id.slice(-6) : id;
+    for (const { CustId: id, CustName: custName, Saldo: saldo } of invoices) {
+      let vaId = id.slice(-6);
+      if (['060', '025'].includes(id.substr(0, 3))) {
+        vaId = id;
+      }
       const invoice =
-        `*${IdrFormat.format(amount)}* ${description}` +
+        '\n' +
+        `${custName}(${id}) - *${IdrFormat.format(Math.abs(saldo))}*` +
         '\n' +
         `BCA VA: *${bcaVaPrefix}-${vaId}*` +
         '\n' +
-        `Mandiri VA: *${mandiriVaPrefix}-${vaId}`;
+        `Mandiri VA: *${mandiriVaPrefix}-${vaId}*`;
       invoiceList.push(invoice);
     }
 
