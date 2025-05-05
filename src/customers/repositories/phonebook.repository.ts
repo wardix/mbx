@@ -52,7 +52,8 @@ export class PhonebookRepository extends Repository<Phonebook> {
     const sql = `
       SELECT cs.CustServId, cs.installation_address,
              IFNULL(cs.ServiceType, s.ServiceType) description,
-             IFNULL(c.DisplayBranchId, c.BranchId) branchId
+             IFNULL(c.DisplayBranchId, c.BranchId) branchId,
+             cs.CustBlockFrom blockFromCustomerRequest
       FROM sms_phonebook pb
       LEFT JOIN CustomerServices cs ON cs.CustId = pb.custId
       LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
@@ -60,8 +61,8 @@ export class PhonebookRepository extends Repository<Phonebook> {
       LEFT JOIN Customer c ON cs.CustId = c.CustId
       WHERE pb.phone LIKE '%${phone}'
       AND cs.CustStatus IN ('BL')
-      AND CustBlockReason LIKE '%by System'
-      AND ServiceGroupTypeId = 1
+      AND cs.CustBlockFrom = 0
+      AND sg.ServiceGroupTypeId = 1
     `;
     return this.query(sql);
   }
