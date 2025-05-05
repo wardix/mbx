@@ -58,8 +58,9 @@ export class PhonebookRepository extends Repository<Phonebook> {
       LEFT JOIN Services s ON cs.ServiceId = s.ServiceId
       LEFT JOIN ServiceGroup sg ON sg.ServiceGroup = s.ServiceGroup
       LEFT JOIN Customer c ON cs.CustId = c.CustId
-      WHERE phone LIKE '%${phone}'
+      WHERE pb.phone LIKE '%${phone}'
       AND cs.CustStatus IN ('BL')
+      AND CustBlockReason LIKE '%by System'
       AND ServiceGroupTypeId = 1
     `;
     return this.query(sql);
