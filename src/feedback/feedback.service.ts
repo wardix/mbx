@@ -86,6 +86,8 @@ export class FeedbackService {
       respondedInboxId: createdSmsInbox.id,
     });
 
+    await this.smsService.deleteSatisfactionByTicketId(ticketId);
+
     const smsSatisfaction = {
       inboxId: createdSmsInbox.id,
       ticketId,
