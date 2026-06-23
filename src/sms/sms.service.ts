@@ -35,6 +35,10 @@ export class SmsService {
     return this.smsSatisfactionRepository.save(smsSatisfaction);
   }
 
+  async deleteSatisfactionByTicketId(ticketId: number): Promise<any> {
+    return this.smsSatisfactionRepository.delete({ ticketId });
+  }
+
   async createSentSatisfaction(
     smsSentSatisfactionData: Partial<SmsSentSatisfaction>,
   ): Promise<SmsSentSatisfaction> {
